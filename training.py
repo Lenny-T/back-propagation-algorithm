@@ -3,11 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # DEFINE THE NEURAL NETWORK ARCHITECTURE 
-numberOfInputs = 3 # NUMBER OF INPUTS
-numberOfHiddenNodes = 5 # NUMBER OF HIDDEN NODES
+numberOfInputs = 6 # NUMBER OF INPUTS
+numberOfHiddenNodes = 9 # NUMBER OF HIDDEN NODES
 numberOfOutputs = 1 # NUMBER OF OUTPUTS
 learningParam = 0.5 # ASSIGN THE LEARNING PARAMETER
-epochs = 10000 # ASSIGN THE NUMBER OF EPOCHS
+epochs = 1000 # ASSIGN THE NUMBER OF EPOCHS
 
 # GET THE DATA FROM THE EXCEL SHEET
 df = pd.read_excel("Important-Files/Ouse93-96 - Student.xlsx")
@@ -16,9 +16,18 @@ inputNodes = df.iloc[1:trainingData, 1:(numberOfInputs + 1)].apply(pd.to_numeric
 outputNodes = df.iloc[1:trainingData, 8].apply(pd.to_numeric, errors='coerce').values # STORE THE OUTPUT BASED ION THE NUMBER OF OUTPUTS
 
 # DATA PREPROCERSSING
-inputNodes = (inputNodes - np.mean(inputNodes, axis=0)) / np.std(inputNodes, axis=0) # STANDARDISE THE INPUTS
-outputNodes = (outputNodes - np.mean(outputNodes, axis=0)) / np.std(outputNodes, axis=0) # STANDARDISE THE OUTPUTS
-outputNodes = (outputNodes - np.min(outputNodes)) / (np.max(outputNodes) - np.min(outputNodes))
+inputMean = np.mean(inputNodes, axis=0)
+inputStandardDeviation = np.std(inputNodes, axis=0)
+inputNodes = (inputNodes - inputMean) / inputStandardDeviation # STANDARDISE THE INPUTS
+
+outputMean = np.mean(outputNodes, axis=0)
+outputStandardDeviation = np.std(outputNodes, axis=0)
+outputNodes = (outputNodes - outputMean) / outputStandardDeviation # STANDARDISE THE OUTPUTS
+
+outputMin = np.min(outputNodes, axis=0)
+outputMax = np.max(outputNodes, axis=0)
+outputNodes = (outputNodes - outputMin) / (outputMax - outputMin) # NORMALISE OUTPUT DATA
+
 
 
 # LECTURE EXAMPLE DATA
@@ -82,6 +91,9 @@ outputBias = np.round(outputBias, 4)
 # LOOP THROUGH THE NUMBER OF EPOCHS
 listOfErrors = []
 listOfMSE = []
+
+
+# T R A I N I N G
 for epoch in range(epochs):
     # LOOP THROUGH ALL OF THE INPUTS
     totalError = 0 # RESET TOTAL ERROR
@@ -136,8 +148,58 @@ for epoch in range(epochs):
         print(f"MSE: {totalError/len(inputNodes)}")
 
 # PLOT THE MSE OVER EPOCHS
-plt.plot(range(epochs), listOfMSE)
-plt.xlabel('Epochs')
-plt.ylabel('Mean Squared Error (MSE)')
-plt.title('Training Error Over Epochs')
-plt.show()
+# plt.plot(range(epochs), listOfMSE)
+# plt.xlabel('Epochs')
+# plt.ylabel('Mean Squared Error (MSE)')
+# plt.title('Training Error Over Epochs')
+# plt.show()
+
+
+
+
+# V A L I D A T I O N
+
+
+
+
+
+
+# T E S T I N G
+testingData = int(0.2 * len(df))
+testingData += trainingData
+# trainingData
+testInputNodes = df.iloc[trainingData+1:testingData, 1:(numberOfInputs + 1)].apply(pd.to_numeric, errors='coerce').values
+testOutputNodes = df.iloc[trainingData+1:testingData, 8].apply(pd.to_numeric, errors='coerce').values
+
+# DATA PREPROCESSING
+testInputNodes = (testInputNodes - inputMean) / inputStandardDeviation
+testOutputNodes = (testOutputNodes - outputMean) / outputStandardDeviation
+
+# Optional: Normalize test output data
+testOutputNodes = (testOutputNodes - outputMin) / (outputMax - outputMin)
+
+# F O R W A R D   P A S S 
+totalError = 0
+predictedList = []
+for i in range(len(testInputNodes)):
+    weightedSum = np.dot(testInputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WIEGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
+    weightedSum = np.round(weightedSum, 4)
+    Uj = sigmoidFunction(weightedSum) # CALCULATE THE SIGMOID FUNCTION USING THE WEIGHTED SUM. THESE ARE THE NEW NODE VALUES FOR THE HIDDEN NODES.
+    predictedOutputWeightesSum = np.dot(Uj, outputWeights) + outputBias # CALCULATE THE PREDICTED OUTPUT USING np.dot(hidden_activations, output_weights) + output_bias
+    predictedOutput = sigmoidFunction(predictedOutputWeightesSum)
+    predictedList.append(predictedOutput)
+    error = testOutputNodes[i] - predictedOutput # CALCULATE THE ERROR USING ACTUAL OUTPUT - PREDICTED OUTPUT
+    # print(f"Predicted: {predictedOutput}, Correct: {testOutputNodes[i]}")
+    totalError += (error ** 2)
+print(f"TEST MSE: {totalError/len(testInputNodes)}")
+
+
+
+# PLOT ACTUAL VS PREDICTED GRAPH WITH A LINE OF BEST FIT
+# fig, ax = plt.subplots()
+# ax.scatter(predictedList, testOutputNodes)
+# plt.plot([min(testOutputNodes), max(testOutputNodes)], [min(testOutputNodes), max(testOutputNodes)])
+# plt.xlabel('Predicted Values')
+# plt.ylabel('Actual Values')
+# plt.title('Predicted vs Actual')
+# plt.show()
