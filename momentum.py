@@ -7,7 +7,7 @@ numberOfInputs = 6 # NUMBER OF INPUTS
 numberOfHiddenNodes = 9 # NUMBER OF HIDDEN NODES
 numberOfOutputs = 1 # NUMBER OF OUTPUTS
 learningParam = 0.4 # ASSIGN THE LEARNING PARAMETER
-epochs = 2000 # ASSIGN THE NUMBER OF EPOCHS
+epochs = 1000 # ASSIGN THE NUMBER OF EPOCHS
 epochs += 1
 
 # GET THE DATA FROM THE EXCEL SHEET
@@ -30,12 +30,37 @@ outputMax = np.max(outputNodes, axis=0)
 outputNodes = (outputNodes - outputMin) / (outputMax - outputMin) # NORMALISE OUTPUT DATA
 
 
+# LECTURE EXAMPLE DATA
+# inputNodes = [
+#     [0.3, 0.7],
+#     [0.7, 0.3],
+#     [0.7, 0.2],
+#     [0.6, 0.3],
+#     [0.8, 0.3],
+#     [0.7, 0.4],
+#     [0.3, 0.6],
+#     [0.4, 0.7],
+#     [0.2, 0.7],
+#     [0.3, 0.8],
+#     [0, 1],
+#     [1, 0],
+#     [0.5, 0.5],
+#     [0.6, 0.2],
+#     [0.8, 0.4],
+#     [0.2, 0.6],
+#     [0.4, 0.8]
+# ]
+# outputNodes = [0.102, 0.074, 1.024, 0.975, 0.975, 1.025, 0.975, 1.026, 1.001, 0.960, 1.011, 0.998, 1.123, 1.125, 1.124, 1.125, 1.124]
+
+
 def sigmoidFunction(weightedSum):
     return 1 / (1 + np.exp(-weightedSum)) # Uj = 1 / 1 + e^Sj
+    # return ((np.exp(weightedSum) - np.exp(-weightedSum)) / (np.exp(weightedSum) + np.exp(-weightedSum))) # Tan(h)
 
 # CREATE THE SIGMOID DERIVATIVE FUNCTION
 def sigmoidDerivative(nodeValue):
     return nodeValue * (1 - nodeValue) # Uj (1 - Uj)
+    # return (1 - (nodeValue**2)) # Derivative of # Tan(h)
 
 # INITIALSIED THE WEIGHTS AND BIASES RANDOMLY
 hiddenInputWeights = np.zeros((numberOfInputs, numberOfHiddenNodes)) # INITIALISED WEIGHTS MATRIX TO 0 np.zeros((input_size, hidden_nodes))
@@ -51,6 +76,8 @@ hiddenInputWeights = np.round(hiddenInputWeights, 4)
 for i in range(numberOfHiddenNodes):
     hiddenBiases[i] = np.random.randn() # ASSIGN BIAS[J] WITH A RANDOM WEIGHT np.random.randn()
 hiddenBiases = np.round(hiddenBiases, 4)
+# print(f"Weights From Inputs To Hidden:\n{hiddenInputWeights}")
+# print(f"Hidden Biases:\n{hiddenBiases}")
 
 # INITIALISE THE OUTPUT WEIGHTS AND BIAS RANDOMLY
 outputWeights = np.random.randn(numberOfHiddenNodes, numberOfOutputs) # GET THE RANDOM WEIGHTS OF THE OUTPUT NODE
@@ -58,6 +85,8 @@ outputWeights = np.round(outputWeights, 4)
 
 outputBias = np.random.randn() # GET THE RANDOM BIAS OF THE OUTPUT NODE
 outputBias = np.round(outputBias, 4)
+# print(f"Weights From Hidden To Output:\n{outputWeights}")
+# print(f"Output Biases:\n{outputBias}")
 
 # LOOP THROUGH THE NUMBER OF EPOCHS
 listOfErrors = []
@@ -76,14 +105,19 @@ for epoch in range(epochs):
         predictedOutputWeightesSum = np.dot(Uj, outputWeights) + outputBias # CALCULATE THE PREDICTED OUTPUT USING np.dot(hidden_activations, output_weights) + output_bias
         predictedOutput = sigmoidFunction(predictedOutputWeightesSum)
         error = outputNodes[i] - predictedOutput # CALCULATE THE ERROR USING ACTUAL OUTPUT - PREDICTED OUTPUT
+        # listOfErrors.append(error) # ADD ERROR TO AN ARRAY FOR THE GRAPH
+        # mse = np.mean(error ** 2) # CALCULATE THE MEAN SQUARED ERROR USING np.mean(errors ** 2)
         totalError += (error ** 2) # CALCULATE THE TOTAL ERROR FOR THE EPOCH
+        # print(f"{outputNodes[i]} - {outputWeights}")
 
         # B A C K W A R D   P A S S
         deltas = {} # DICTONARY OF OUTPUTS
         outputFirstDerivative = sigmoidDerivative(predictedOutput) # CALCULATE THE FIRST DERIVATIVE OF THE OUTPUT NODE
         deltas["Output"] = (outputNodes[i] - predictedOutput) * outputFirstDerivative # CALCULATE DELTA OF OUTPUT
-        
+        # print(f"Deltas: {deltas}")
         # LOOP THROUGH ALL THE HIDDEN NODES
+        # print(f"Output Weight: {outputWeights[2][0]}")
+        # print(f"Node Value: {Uj[2]}")
         for j in range(len(Uj)):
             hiddenNodeFirstDerivative = sigmoidDerivative(Uj[j]) # CALCULATE THE FIRST DERIVATIVE OF THE HIDDEN NODES
             hiddenNodeDelta = (outputWeights[j][0] * deltas["Output"]) * hiddenNodeFirstDerivative # CALCULATE THE DELTA OF THE HIDDEN NODE
@@ -91,21 +125,41 @@ for epoch in range(epochs):
         
 
         # UPDATE THE WEIGHTS FROM THE INPUTS
+        originalInputWeights = hiddenInputWeights
         momentum = 0.9
         for x in range(len(hiddenInputWeights)):
             for y in range(len(hiddenInputWeights[x])):
-                hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) # ORIGINAL WEIGHT UPDATE
+                # hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) # ORIGINAL WEIGHT UPDATE
+                if epoch == 1:
+                    hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) # ORIGINAL WEIGHT UPDATE
+                else:
+                    hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) + (momentum * (hiddenInputWeights[x][y] - originalInputWeights[x][y])) # MOMENTUM
+        # print(hiddenInputWeights)
+
 
         # UPDATE THE WEIGTHS FROM THE HIDDEN NODES TO THE OUTPUT
+        # print(hiddenInputWeights)
+        # print(outputWeights) # hiddenInputWeights[input][hidden]
+        originalOutputWeights = outputWeights
         for x in range(len(outputWeights)):
-            outputWeights[x, 0] += learningParam * (deltas["Output"][0] * Uj[x]) # ORIGINAL WEIGHT UPDATE
+            if epoch == 1:
+                outputWeights[x, 0] += learningParam * (deltas["Output"][0] * Uj[x]) # ORIGINAL WEIGHT UPDATE
+            else:
+                outputWeights[x, 0] += learningParam * (deltas["Output"][0] * Uj[x]) + (momentum * (outputWeights[x][0] - originalOutputWeights[x][0])) # MOMENTUM
         
         # BIAS UPDATES
+        originialHiddenBiases = hiddenBiases
         for i in range(numberOfHiddenNodes):
-            hiddenBiases[i] += learningParam * deltas[i+1][0]
+            if epoch == 1:
+                hiddenBiases[i] += learningParam * deltas[i+1][0] # ORIGINAL WEIGHT UPDATE
+            else:
+                hiddenBiases[i] += learningParam * deltas[i+1][0] + (momentum * (hiddenBiases[i] - originialHiddenBiases[i])) # MOMENTUM
         
-        outputBias += learningParam * (deltas["Output"][0] * predictedOutput[0]) # ORIGINAL UPDATING OF WEIGHTS
-        
+        originalOutputBias = outputBias
+        if epoch == 1:
+            outputBias += learningParam * (deltas["Output"][0] * predictedOutput[0]) # ORIGINAL UPDATING OF WEIGHTS
+        else:
+            outputBias += learningParam * (deltas["Output"][0] * predictedOutput[0]) + (momentum * (outputBias - originalOutputBias)) # MOMENTUM
         
     # APPEND MSE TO THE LIST FOR PLOTTING
     listOfMSE.append(totalError/len(inputNodes))
