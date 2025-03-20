@@ -129,7 +129,6 @@ plt.show()
 
 
 
-
 # T E S T I N G
 testingData = int(0.2 * len(df))
 testingData += trainingData
@@ -145,19 +144,15 @@ testOutputNodes = (testOutputNodes - outputMin) / (outputMax - outputMin)
 totalError = 0
 predictedList = []
 for i in range(len(testInputNodes)):
-    weightedSum = np.dot(testInputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WIEGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
+    weightedSum = np.dot(testInputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WEIGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
     weightedSum = np.round(weightedSum, 4)
     Uj = sigmoidFunction(weightedSum) # CALCULATE THE SIGMOID FUNCTION USING THE WEIGHTED SUM. THESE ARE THE NEW NODE VALUES FOR THE HIDDEN NODES.
     predictedOutputWeightesSum = np.dot(Uj, outputWeights) + outputBias # CALCULATE THE PREDICTED OUTPUT USING np.dot(hidden_activations, output_weights) + output_bias
     predictedOutput = sigmoidFunction(predictedOutputWeightesSum)
     predictedList.append(predictedOutput)
     error = testOutputNodes[i] - predictedOutput # CALCULATE THE ERROR USING ACTUAL OUTPUT - PREDICTED OUTPUT
-    # print(f"Predicted: {predictedOutput}, Correct: {testOutputNodes[i]}")
     totalError += (error ** 2)
 print(f"TEST MSE: {totalError/len(testInputNodes)}")
-
-
-
 
 # PLOT ACTUAL VS PREDICTED GRAPH WITH A LINE OF BEST FIT
 fig, ax = plt.subplots()
