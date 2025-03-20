@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 numberOfInputs = 6 # NUMBER OF INPUTS
 numberOfHiddenNodes = 9 # NUMBER OF HIDDEN NODES
 numberOfOutputs = 1 # NUMBER OF OUTPUTS
-learningParam = 0.5 # ASSIGN THE LEARNING PARAMETER
-epochs = 1000 # ASSIGN THE NUMBER OF EPOCHS
+learningParam = 0.4 # ASSIGN THE LEARNING PARAMETER
+epochs = 2000 # ASSIGN THE NUMBER OF EPOCHS
 
 # GET THE DATA FROM THE EXCEL SHEET
 df = pd.read_excel("Important-Files/Ouse93-96 - Student.xlsx")
@@ -27,7 +27,6 @@ outputNodes = (outputNodes - outputMean) / outputStandardDeviation # STANDARDISE
 outputMin = np.min(outputNodes, axis=0)
 outputMax = np.max(outputNodes, axis=0)
 outputNodes = (outputNodes - outputMin) / (outputMax - outputMin) # NORMALISE OUTPUT DATA
-
 
 
 # LECTURE EXAMPLE DATA
@@ -125,21 +124,39 @@ for epoch in range(epochs):
         
 
         # UPDATE THE WEIGHTS FROM THE INPUTS
+        originalInputWeights = hiddenInputWeights
+        momentum = 0.9
         for x in range(len(hiddenInputWeights)):
             for y in range(len(hiddenInputWeights[x])):
-                hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x])
+                if epoch == 1:
+                    hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) # ORIGINAL WEIGHT UPDATE
+                else:
+                    hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) + (momentum * (hiddenInputWeights[x][y] - originalInputWeights[x][y])) # MOMENTUM
         # print(hiddenInputWeights)
 
         # UPDATE THE WEIGTHS FROM THE HIDDEN NODES TO THE OUTPUT
         # print(hiddenInputWeights)
         # print(outputWeights) # hiddenInputWeights[input][hidden]
+        originalOutputWeights = outputWeights
         for x in range(len(outputWeights)):
-            outputWeights[x, 0] += learningParam * (deltas["Output"][0] * Uj[x])
+            if epoch == 1:
+                outputWeights[x, 0] += learningParam * (deltas["Output"][0] * Uj[x])
+            else:
+                outputWeights[x, 0] += learningParam * (deltas["Output"][0] * Uj[x]) + (momentum * (outputWeights[x][0] - originalOutputWeights[x][0])) # MOMENTUM
         
         # BIAS UPDATES
+        originialHiddenBiases = hiddenBiases
         for i in range(numberOfHiddenNodes):
-            hiddenBiases[i] += learningParam * deltas[i+1][0]
-        outputBias += learningParam * (deltas["Output"][0] * predictedOutput[0])
+            if epoch == 1:
+                hiddenBiases[i] += learningParam * deltas[i+1][0]
+            else:
+                hiddenBiases[i] += learningParam * deltas[i+1][0] + (momentum * (hiddenBiases[i] - originialHiddenBiases[i])) # MOMENTUM
+        
+        originalOutputBias = outputBias
+        if epoch == 1:
+            outputBias += learningParam * (deltas["Output"][0] * predictedOutput[0]) # ORIGINAL UPDATING OF WEIGHTS
+        else:
+            outputBias += learningParam * (deltas["Output"][0] * predictedOutput[0]) + (momentum * (outputBias - originalOutputBias)) # MOMENTUM
         
     # APPEND MSE TO THE LIST FOR PLOTTING
     listOfMSE.append(totalError/len(inputNodes))
@@ -148,11 +165,11 @@ for epoch in range(epochs):
         print(f"MSE: {totalError/len(inputNodes)}")
 
 # PLOT THE MSE OVER EPOCHS
-# plt.plot(range(epochs), listOfMSE)
-# plt.xlabel('Epochs')
-# plt.ylabel('Mean Squared Error (MSE)')
-# plt.title('Training Error Over Epochs')
-# plt.show()
+plt.plot(range(epochs), listOfMSE)
+plt.xlabel('Epochs')
+plt.ylabel('Mean Squared Error (MSE)')
+plt.title('Training Error Over Epochs')
+plt.show()
 
 
 
@@ -167,15 +184,12 @@ for epoch in range(epochs):
 # T E S T I N G
 testingData = int(0.2 * len(df))
 testingData += trainingData
-# trainingData
 testInputNodes = df.iloc[trainingData+1:testingData, 1:(numberOfInputs + 1)].apply(pd.to_numeric, errors='coerce').values
 testOutputNodes = df.iloc[trainingData+1:testingData, 8].apply(pd.to_numeric, errors='coerce').values
 
 # DATA PREPROCESSING
 testInputNodes = (testInputNodes - inputMean) / inputStandardDeviation
 testOutputNodes = (testOutputNodes - outputMean) / outputStandardDeviation
-
-# Optional: Normalize test output data
 testOutputNodes = (testOutputNodes - outputMin) / (outputMax - outputMin)
 
 # F O R W A R D   P A S S 
@@ -195,11 +209,12 @@ print(f"TEST MSE: {totalError/len(testInputNodes)}")
 
 
 
+
 # PLOT ACTUAL VS PREDICTED GRAPH WITH A LINE OF BEST FIT
-# fig, ax = plt.subplots()
-# ax.scatter(predictedList, testOutputNodes)
-# plt.plot([min(testOutputNodes), max(testOutputNodes)], [min(testOutputNodes), max(testOutputNodes)])
-# plt.xlabel('Predicted Values')
-# plt.ylabel('Actual Values')
-# plt.title('Predicted vs Actual')
-# plt.show()
+fig, ax = plt.subplots()
+ax.scatter(predictedList, testOutputNodes)
+plt.plot([min(testOutputNodes), max(testOutputNodes)], [min(testOutputNodes), max(testOutputNodes)])
+plt.xlabel('Predicted Values')
+plt.ylabel('Actual Values')
+plt.title('Predicted vs Actual')
+plt.show()
