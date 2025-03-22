@@ -7,11 +7,11 @@ numberOfInputs = 6 # NUMBER OF INPUTS
 numberOfHiddenNodes = 9 # NUMBER OF HIDDEN NODES
 numberOfOutputs = 1 # NUMBER OF OUTPUTS
 learningParam = 0.4 # ASSIGN THE LEARNING PARAMETER
-epochs = 1000 # ASSIGN THE NUMBER OF EPOCHS
+epochs = 1 # ASSIGN THE NUMBER OF EPOCHS
 epochs += 1
 
 # GET THE DATA FROM THE EXCEL SHEET
-df = pd.read_excel("Important-Files/Ouse93-96 - Student.xlsx")
+df = pd.read_excel("Important-Files/Ouse93-96 - Student (Cleaned).xlsx")
 trainingData = int(0.6 * len(df))
 inputNodes = df.iloc[1:trainingData, 1:(numberOfInputs + 1)].apply(pd.to_numeric, errors='coerce').values # STORE THE INPUT BASED ON THE NUMBER OF INPUTS
 outputNodes = df.iloc[1:trainingData, 8].apply(pd.to_numeric, errors='coerce').values # STORE THE OUTPUT BASED ION THE NUMBER OF OUTPUTS
@@ -98,6 +98,7 @@ for epoch in range(epochs):
     # LOOP THROUGH ALL OF THE INPUTS
     totalError = 0 # RESET TOTAL ERROR
     for i in range(len(inputNodes)):
+
         # F O R W A R D   P A S S 
         weightedSum = np.dot(inputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WIEGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
         weightedSum = np.round(weightedSum, 4)
@@ -124,22 +125,36 @@ for epoch in range(epochs):
             deltas[(j+1)] = hiddenNodeDelta
         
 
+        # U P D A T I N G   T H E   W E I G H T S
+
+        # B O L D   D R I V E R
+        
+        # CHECK IF THE MSE HAS INCREASED OR DECREASED
+
+        # IF MSE INCREASED MORE THAN 4% THEN REDUCE THE LEARNING PARAMETER BY 30%
+
+        # CHECK AGAIN IF LEARNING PARAM HAS INCREASED / DECREASED
+
+        # IF MSE DECREASED MORE THAN 4% THEN INCREASE THE LEARNING PARAMETER BY 5%.
+
+        # CHECK AGAIN IF LEARNING PARAM HAS INCREASED / DECREASED
+
+
+
+
+        # M O M E N T U M
         # UPDATE THE WEIGHTS FROM THE INPUTS
         originalInputWeights = hiddenInputWeights
         momentum = 0.9
         for x in range(len(hiddenInputWeights)):
             for y in range(len(hiddenInputWeights[x])):
-                # hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) # ORIGINAL WEIGHT UPDATE
                 if epoch == 1:
                     hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) # ORIGINAL WEIGHT UPDATE
                 else:
                     hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) + (momentum * (hiddenInputWeights[x][y] - originalInputWeights[x][y])) # MOMENTUM
-        # print(hiddenInputWeights)
 
 
         # UPDATE THE WEIGTHS FROM THE HIDDEN NODES TO THE OUTPUT
-        # print(hiddenInputWeights)
-        # print(outputWeights) # hiddenInputWeights[input][hidden]
         originalOutputWeights = outputWeights
         for x in range(len(outputWeights)):
             if epoch == 1:

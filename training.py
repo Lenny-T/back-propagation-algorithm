@@ -7,11 +7,11 @@ numberOfInputs = 6 # NUMBER OF INPUTS
 numberOfHiddenNodes = 9 # NUMBER OF HIDDEN NODES
 numberOfOutputs = 1 # NUMBER OF OUTPUTS
 learningParam = 0.4 # ASSIGN THE LEARNING PARAMETER
-epochs = 2000 # ASSIGN THE NUMBER OF EPOCHS
+epochs = 1000 # ASSIGN THE NUMBER OF EPOCHS
 epochs += 1
 
 # GET THE DATA FROM THE EXCEL SHEET
-df = pd.read_excel("Important-Files/Ouse93-96 - Student.xlsx")
+df = pd.read_excel("Important-Files/Ouse93-96 - Student (Cleaned).xlsx")
 trainingData = int(0.6 * len(df))
 inputNodes = df.iloc[1:trainingData, 1:(numberOfInputs + 1)].apply(pd.to_numeric, errors='coerce').values # STORE THE INPUT BASED ON THE NUMBER OF INPUTS
 outputNodes = df.iloc[1:trainingData, 8].apply(pd.to_numeric, errors='coerce').values # STORE THE OUTPUT BASED ION THE NUMBER OF OUTPUTS
