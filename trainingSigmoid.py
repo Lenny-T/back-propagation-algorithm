@@ -40,11 +40,13 @@ def sigmoidDerivative(nodeValue):
 # INITIALSIED THE WEIGHTS AND BIASES RANDOMLY
 hiddenInputWeights = np.zeros((numberOfInputs, numberOfHiddenNodes)) # INITIALISED WEIGHTS MATRIX TO 0 np.zeros((input_size, hidden_nodes))
 hiddenBiases = np.zeros((numberOfHiddenNodes)) # INITIALISE BIAS MATRIX TO 0
+
 # LOOP THROUGH THE NUMBER OF INPUT NODES
 for i in range(numberOfInputs):
     # LOOP THROUGH THE NUMBER OF HIDDEN NODES
     for j in range(numberOfHiddenNodes):
         hiddenInputWeights[i,j] = np.random.randn() # ASSIGN WEIGHT[I, J] WITH A RANDOM WEIGHT np.random.randn()
+
 hiddenInputWeights = np.round(hiddenInputWeights, 4)
 
 # LOOP THROUGH THE NUMBER OF HIDDEN NODES
@@ -73,8 +75,8 @@ for epoch in range(epochs):
         weightedSum = np.dot(inputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WIEGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
         weightedSum = np.round(weightedSum, 4)
         Uj = sigmoidFunction(weightedSum) # CALCULATE THE SIGMOID FUNCTION USING THE WIEGHTED SUM. THESE ARE THE NEW NODE VALUES FOR THE HIDDEN NODES.
-        predictedOutputWeightesSum = np.dot(Uj, outputWeights) + outputBias # CALCULATE THE PREDICTED OUTPUT USING np.dot(hidden_activations, output_weights) + output_bias
-        predictedOutput = sigmoidFunction(predictedOutputWeightesSum)
+        predictedOutputWeightedSum = np.dot(Uj, outputWeights) + outputBias # CALCULATE THE PREDICTED OUTPUT USING np.dot(hidden_activations, output_weights) + output_bias
+        predictedOutput = sigmoidFunction(predictedOutputWeightedSum)
         error = outputNodes[i] - predictedOutput # CALCULATE THE ERROR USING ACTUAL OUTPUT - PREDICTED OUTPUT
         totalError += (error ** 2) # CALCULATE THE TOTAL ERROR FOR THE EPOCH
 

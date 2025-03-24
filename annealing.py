@@ -7,15 +7,8 @@ numberOfInputs = 6 # NUMBER OF INPUTS
 numberOfHiddenNodes = 9 # NUMBER OF HIDDEN NODES
 numberOfOutputs = 1 # NUMBER OF OUTPUTS
 learningParam = 0.4 # ASSIGN THE LEARNING PARAMETER
-epochs = 100 # ASSIGN THE NUMBER OF EPOCHS
+epochs = 2000 # ASSIGN THE NUMBER OF EPOCHS
 epochs += 1
-
-# INITIALISATION FOR BOLD DRIVER
-initialLearningParam = 0.4
-learningParam = initialLearningParam # ASSIGN THE LEARNING PARAMETER
-leanringParamIncrease = 1.05  # 5% increase when error decreases
-leanringParamDecrease = 0.3   # 50% decrease when error increases
-previousError = float('inf')  # Track error from previous epoch
 
 # GET THE DATA FROM THE EXCEL SHEET
 df = pd.read_excel("Important-Files/Ouse93-96 - Student (Cleaned).xlsx")
@@ -75,24 +68,24 @@ outputBias = np.round(outputBias, 4)
 # LOOP THROUGH THE NUMBER OF EPOCHS
 listOfErrors = []
 listOfMSE = []
-
+listOfLearningParameters = []
+startLearningParameter = learningParam
+endLearningParameter = 0.05
+# listOfLearningParameters.append(learningParam)
 
 # T R A I N I N G
 for epoch in range(epochs):
     # LOOP THROUGH ALL OF THE INPUTS
     totalError = 0 # RESET TOTAL ERROR
     for i in range(len(inputNodes)):
-        index = 1
         # F O R W A R D   P A S S 
         weightedSum = np.dot(inputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WIEGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
         weightedSum = np.round(weightedSum, 4)
-        
         Uj = sigmoidFunction(weightedSum) # CALCULATE THE SIGMOID FUNCTION USING THE WIEGHTED SUM. THESE ARE THE NEW NODE VALUES FOR THE HIDDEN NODES.
         predictedOutputWeightesSum = np.dot(Uj, outputWeights) + outputBias # CALCULATE THE PREDICTED OUTPUT USING np.dot(hidden_activations, output_weights) + output_bias
         predictedOutput = sigmoidFunction(predictedOutputWeightesSum)
         error = outputNodes[i] - predictedOutput # CALCULATE THE ERROR USING ACTUAL OUTPUT - PREDICTED OUTPUT
         # listOfErrors.append(error) # ADD ERROR TO AN ARRAY FOR THE GRAPH
-
         # mse = np.mean(error ** 2) # CALCULATE THE MEAN SQUARED ERROR USING np.mean(errors ** 2)
         totalError += (error ** 2) # CALCULATE THE TOTAL ERROR FOR THE EPOCH
         # print(f"{outputNodes[i]} - {outputWeights}")
@@ -109,22 +102,24 @@ for epoch in range(epochs):
             hiddenNodeFirstDerivative = sigmoidDerivative(Uj[j]) # CALCULATE THE FIRST DERIVATIVE OF THE HIDDEN NODES
             hiddenNodeDelta = (outputWeights[j][0] * deltas["Output"]) * hiddenNodeFirstDerivative # CALCULATE THE DELTA OF THE HIDDEN NODE
             deltas[(j+1)] = hiddenNodeDelta
+        
 
-
-
-        # M O M E N T U M
         # UPDATE THE WEIGHTS FROM THE INPUTS
         originalInputWeights = hiddenInputWeights
         momentum = 0.9
         for x in range(len(hiddenInputWeights)):
             for y in range(len(hiddenInputWeights[x])):
+                # hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) # ORIGINAL WEIGHT UPDATE
                 if epoch == 1:
                     hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) # ORIGINAL WEIGHT UPDATE
                 else:
                     hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) + (momentum * (hiddenInputWeights[x][y] - originalInputWeights[x][y])) # MOMENTUM
+        # print(hiddenInputWeights)
 
 
         # UPDATE THE WEIGTHS FROM THE HIDDEN NODES TO THE OUTPUT
+        # print(hiddenInputWeights)
+        # print(outputWeights) # hiddenInputWeights[input][hidden]
         originalOutputWeights = outputWeights
         for x in range(len(outputWeights)):
             if epoch == 1:
@@ -145,15 +140,10 @@ for epoch in range(epochs):
             outputBias += learningParam * (deltas["Output"][0] * predictedOutput[0]) # ORIGINAL UPDATING OF WEIGHTS
         else:
             outputBias += learningParam * (deltas["Output"][0] * predictedOutput[0]) + (momentum * (outputBias - originalOutputBias)) # MOMENTUM
-
-
-        # B O L D   D R I V E R
-        # STORING THE CURRENT AND PREVIOUS MSE
-        # IF MSE INCREASED MORE THAN 4% THEN REDUCE THE LEARNING PARAMETER BY 30%
-        # CHECK AGAIN IF LEARNING PARAMETER HAS INCREASED / DECREASED
-        # IF MSE DECREASED MORE THAN 4% THEN INCREASE THE LEARNING PARAMETER BY 5%.
-        # CHECK AGAIN IF LEARNING PARAMETER HAS INCREASED / DECREASED
         
+    # A N N E A L I N G   F O R M U L A R
+    listOfLearningParameters.append(learningParam)
+    learningParam = (endLearningParameter + (startLearningParameter - endLearningParameter)) * (1 - (1/(1 + (np.exp(10 - ((20 * epoch)/epochs))))))
 
     # APPEND MSE TO THE LIST FOR PLOTTING
     listOfMSE.append(totalError/len(inputNodes))
@@ -166,10 +156,14 @@ plt.plot(range(epochs), listOfMSE)
 plt.xlabel('Epochs')
 plt.ylabel('Mean Squared Error (MSE)')
 plt.title('Training Error Over Epochs')
-# plt.show()
+plt.show()
 
-
-
+# PLOT THE LEARNING PARAMETER OVER EPOCHS
+plt.plot(range(epochs), listOfLearningParameters)
+plt.xlabel('Epochs')
+plt.ylabel('Learning Parameter')
+plt.title('Change In Leanring Parameters')
+plt.show()
 
 # V A L I D A T I O N
 
@@ -188,10 +182,9 @@ testOutputNodes = df.iloc[trainingData+1:testingData, 8].apply(pd.to_numeric, er
 testInputNodes = (testInputNodes - inputMean) / inputStandardDeviation
 testOutputNodes = (testOutputNodes - outputMean) / outputStandardDeviation
 testOutputNodes = (testOutputNodes - outputMin) / (outputMax - outputMin)
-
-# F O R W A R D   P A S S 
 totalError = 0
 predictedList = []
+
 for i in range(len(testInputNodes)):
     weightedSum = np.dot(testInputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WIEGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
     weightedSum = np.round(weightedSum, 4)
@@ -214,4 +207,4 @@ plt.plot([min(testOutputNodes), max(testOutputNodes)], [min(testOutputNodes), ma
 plt.xlabel('Predicted Values')
 plt.ylabel('Actual Values')
 plt.title('Predicted vs Actual')
-# plt.show()
+plt.show()
