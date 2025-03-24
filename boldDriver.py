@@ -7,7 +7,7 @@ numberOfInputs = 6 # NUMBER OF INPUTS
 numberOfHiddenNodes = 9 # NUMBER OF HIDDEN NODES
 numberOfOutputs = 1 # NUMBER OF OUTPUTS
 learningParam = 0.4 # ASSIGN THE LEARNING PARAMETER
-epochs = 1 # ASSIGN THE NUMBER OF EPOCHS
+epochs = 100 # ASSIGN THE NUMBER OF EPOCHS
 epochs += 1
 
 # GET THE DATA FROM THE EXCEL SHEET
@@ -28,29 +28,6 @@ outputNodes = (outputNodes - outputMean) / outputStandardDeviation # STANDARDISE
 outputMin = np.min(outputNodes, axis=0)
 outputMax = np.max(outputNodes, axis=0)
 outputNodes = (outputNodes - outputMin) / (outputMax - outputMin) # NORMALISE OUTPUT DATA
-
-
-# LECTURE EXAMPLE DATA
-# inputNodes = [
-#     [0.3, 0.7],
-#     [0.7, 0.3],
-#     [0.7, 0.2],
-#     [0.6, 0.3],
-#     [0.8, 0.3],
-#     [0.7, 0.4],
-#     [0.3, 0.6],
-#     [0.4, 0.7],
-#     [0.2, 0.7],
-#     [0.3, 0.8],
-#     [0, 1],
-#     [1, 0],
-#     [0.5, 0.5],
-#     [0.6, 0.2],
-#     [0.8, 0.4],
-#     [0.2, 0.6],
-#     [0.4, 0.8]
-# ]
-# outputNodes = [0.102, 0.074, 1.024, 0.975, 0.975, 1.025, 0.975, 1.026, 1.001, 0.960, 1.011, 0.998, 1.123, 1.125, 1.124, 1.125, 1.124]
 
 
 def sigmoidFunction(weightedSum):
@@ -97,16 +74,19 @@ listOfMSE = []
 for epoch in range(epochs):
     # LOOP THROUGH ALL OF THE INPUTS
     totalError = 0 # RESET TOTAL ERROR
+    currentMSE = 0
     for i in range(len(inputNodes)):
-
+        index = 1
         # F O R W A R D   P A S S 
         weightedSum = np.dot(inputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WIEGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
         weightedSum = np.round(weightedSum, 4)
+        
         Uj = sigmoidFunction(weightedSum) # CALCULATE THE SIGMOID FUNCTION USING THE WIEGHTED SUM. THESE ARE THE NEW NODE VALUES FOR THE HIDDEN NODES.
         predictedOutputWeightesSum = np.dot(Uj, outputWeights) + outputBias # CALCULATE THE PREDICTED OUTPUT USING np.dot(hidden_activations, output_weights) + output_bias
         predictedOutput = sigmoidFunction(predictedOutputWeightesSum)
         error = outputNodes[i] - predictedOutput # CALCULATE THE ERROR USING ACTUAL OUTPUT - PREDICTED OUTPUT
         # listOfErrors.append(error) # ADD ERROR TO AN ARRAY FOR THE GRAPH
+
         # mse = np.mean(error ** 2) # CALCULATE THE MEAN SQUARED ERROR USING np.mean(errors ** 2)
         totalError += (error ** 2) # CALCULATE THE TOTAL ERROR FOR THE EPOCH
         # print(f"{outputNodes[i]} - {outputWeights}")
@@ -123,22 +103,6 @@ for epoch in range(epochs):
             hiddenNodeFirstDerivative = sigmoidDerivative(Uj[j]) # CALCULATE THE FIRST DERIVATIVE OF THE HIDDEN NODES
             hiddenNodeDelta = (outputWeights[j][0] * deltas["Output"]) * hiddenNodeFirstDerivative # CALCULATE THE DELTA OF THE HIDDEN NODE
             deltas[(j+1)] = hiddenNodeDelta
-        
-
-        # U P D A T I N G   T H E   W E I G H T S
-
-        # B O L D   D R I V E R
-        
-        # CHECK IF THE MSE HAS INCREASED OR DECREASED
-
-        # IF MSE INCREASED MORE THAN 4% THEN REDUCE THE LEARNING PARAMETER BY 30%
-
-        # CHECK AGAIN IF LEARNING PARAM HAS INCREASED / DECREASED
-
-        # IF MSE DECREASED MORE THAN 4% THEN INCREASE THE LEARNING PARAMETER BY 5%.
-
-        # CHECK AGAIN IF LEARNING PARAM HAS INCREASED / DECREASED
-
 
 
 
@@ -175,7 +139,32 @@ for epoch in range(epochs):
             outputBias += learningParam * (deltas["Output"][0] * predictedOutput[0]) # ORIGINAL UPDATING OF WEIGHTS
         else:
             outputBias += learningParam * (deltas["Output"][0] * predictedOutput[0]) + (momentum * (outputBias - originalOutputBias)) # MOMENTUM
+
+
+        # B O L D   D R I V E R
+        # STORING THE CURRENT AND PREVIOUS MSE
+            
+        # print(index)
+        # if index > 1:
+        #     previousMSE = currentMSE
+        #     currentMSE = totalError/(i+1)
+        #     difference = (((currentMSE - previousMSE) / previousMSE) * 100)
+        #     # print(f"% Change: {difference}")
+        #     print(f"Previous MSE: {previousMSE}")
+        #     print(f"Current MSE: {currentMSE}")
+
+        # IF MSE INCREASED MORE THAN 4% THEN REDUCE THE LEARNING PARAMETER BY 30%
+
+
+        # CHECK AGAIN IF LEARNING PARAMETER HAS INCREASED / DECREASED
+
+
+        # IF MSE DECREASED MORE THAN 4% THEN INCREASE THE LEARNING PARAMETER BY 5%.
+
+
+        # CHECK AGAIN IF LEARNING PARAMETER HAS INCREASED / DECREASED
         
+
     # APPEND MSE TO THE LIST FOR PLOTTING
     listOfMSE.append(totalError/len(inputNodes))
     if (epoch % 100 == 0):
@@ -187,7 +176,7 @@ plt.plot(range(epochs), listOfMSE)
 plt.xlabel('Epochs')
 plt.ylabel('Mean Squared Error (MSE)')
 plt.title('Training Error Over Epochs')
-plt.show()
+# plt.show()
 
 
 
@@ -235,4 +224,4 @@ plt.plot([min(testOutputNodes), max(testOutputNodes)], [min(testOutputNodes), ma
 plt.xlabel('Predicted Values')
 plt.ylabel('Actual Values')
 plt.title('Predicted vs Actual')
-plt.show()
+# plt.show()

@@ -30,29 +30,6 @@ outputMax = np.max(outputNodes, axis=0)
 outputNodes = (outputNodes - outputMin) / (outputMax - outputMin) # NORMALISE OUTPUT DATA
 
 
-# LECTURE EXAMPLE DATA
-# inputNodes = [
-#     [0.3, 0.7],
-#     [0.7, 0.3],
-#     [0.7, 0.2],
-#     [0.6, 0.3],
-#     [0.8, 0.3],
-#     [0.7, 0.4],
-#     [0.3, 0.6],
-#     [0.4, 0.7],
-#     [0.2, 0.7],
-#     [0.3, 0.8],
-#     [0, 1],
-#     [1, 0],
-#     [0.5, 0.5],
-#     [0.6, 0.2],
-#     [0.8, 0.4],
-#     [0.2, 0.6],
-#     [0.4, 0.8]
-# ]
-# outputNodes = [0.102, 0.074, 1.024, 0.975, 0.975, 1.025, 0.975, 1.026, 1.001, 0.960, 1.011, 0.998, 1.123, 1.125, 1.124, 1.125, 1.124]
-
-
 def sigmoidFunction(weightedSum):
     return 1 / (1 + np.exp(-weightedSum)) # Uj = 1 / 1 + e^Sj
     # return ((np.exp(weightedSum) - np.exp(-weightedSum)) / (np.exp(weightedSum) + np.exp(-weightedSum))) # Tan(h)
@@ -194,10 +171,9 @@ testOutputNodes = df.iloc[trainingData+1:testingData, 8].apply(pd.to_numeric, er
 testInputNodes = (testInputNodes - inputMean) / inputStandardDeviation
 testOutputNodes = (testOutputNodes - outputMean) / outputStandardDeviation
 testOutputNodes = (testOutputNodes - outputMin) / (outputMax - outputMin)
-
-# F O R W A R D   P A S S 
 totalError = 0
 predictedList = []
+
 for i in range(len(testInputNodes)):
     weightedSum = np.dot(testInputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WIEGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
     weightedSum = np.round(weightedSum, 4)
