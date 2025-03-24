@@ -115,46 +115,65 @@ for epoch in range(epochs):
         print(f"Epoch: {epoch}")
         print(f"MSE: {totalError/len(inputNodes)}")
 
-# PLOT THE MSE OVER EPOCHS
-plt.plot(range(epochs), listOfMSE)
-plt.xlabel('Epochs')
-plt.ylabel('Mean Squared Error (MSE)')
-plt.title('Training Error Over Epochs')
-plt.show()
-
-
-
-
 # V A L I D A T I O N
+validationData = int(0.2 * len(df))
+validationData += trainingData
+validationInputNodes = df.iloc[trainingData+1:validationData, 1:(numberOfInputs + 1)].apply(pd.to_numeric, errors='coerce').values
+validationOutputNodes = df.iloc[trainingData+1:validationData, 8].apply(pd.to_numeric, errors='coerce').values
 
+# DATA PREPROCESSING
+validationInputNodes = (validationInputNodes - inputMean) / inputStandardDeviation
+validationOutputNodes = (validationOutputNodes - outputMean) / outputStandardDeviation
+validationOutputNodes = (validationOutputNodes - outputMin) / (outputMax - outputMin)
+totalError = 0
+predictedList = []
 
-
+for i in range(len(validationInputNodes)):
+    weightedSum = np.dot(validationInputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WIEGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
+    weightedSum = np.round(weightedSum, 4)
+    Uj = sigmoidFunction(weightedSum) # CALCULATE THE SIGMOID FUNCTION USING THE WEIGHTED SUM. THESE ARE THE NEW NODE VALUES FOR THE HIDDEN NODES.
+    predictedOutputWeightesSum = np.dot(Uj, outputWeights) + outputBias # CALCULATE THE PREDICTED OUTPUT USING np.dot(hidden_activations, output_weights) + output_bias
+    predictedOutput = sigmoidFunction(predictedOutputWeightesSum)
+    predictedList.append(predictedOutput)
+    error = validationOutputNodes[i] - predictedOutput # CALCULATE THE ERROR USING ACTUAL OUTPUT - PREDICTED OUTPUT
+    # print(f"Predicted: {predictedOutput}, Correct: {validationOutputNodes[i]}")
+    totalError += (error ** 2)
+print(f"Validation MSE: {totalError/len(validationInputNodes)}")
 
 
 # T E S T I N G
 testingData = int(0.2 * len(df))
-testingData += trainingData
-testInputNodes = df.iloc[trainingData+1:testingData, 1:(numberOfInputs + 1)].apply(pd.to_numeric, errors='coerce').values
-testOutputNodes = df.iloc[trainingData+1:testingData, 8].apply(pd.to_numeric, errors='coerce').values
+testingData += validationData
+testInputNodes = df.iloc[validationData+1:testingData, 1:(numberOfInputs + 1)].apply(pd.to_numeric, errors='coerce').values
+testOutputNodes = df.iloc[validationData+1:testingData, 8].apply(pd.to_numeric, errors='coerce').values
 
 # DATA PREPROCESSING
 testInputNodes = (testInputNodes - inputMean) / inputStandardDeviation
 testOutputNodes = (testOutputNodes - outputMean) / outputStandardDeviation
 testOutputNodes = (testOutputNodes - outputMin) / (outputMax - outputMin)
-
-# F O R W A R D   P A S S 
 totalError = 0
 predictedList = []
+
 for i in range(len(testInputNodes)):
-    weightedSum = np.dot(testInputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WEIGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
+    weightedSum = np.dot(testInputNodes[i], hiddenInputWeights) + hiddenBiases # CALCULATE THE WIEGHTED SUM USING weighted_sum = np.dot(inputs, weights) + biases.
     weightedSum = np.round(weightedSum, 4)
     Uj = sigmoidFunction(weightedSum) # CALCULATE THE SIGMOID FUNCTION USING THE WEIGHTED SUM. THESE ARE THE NEW NODE VALUES FOR THE HIDDEN NODES.
     predictedOutputWeightesSum = np.dot(Uj, outputWeights) + outputBias # CALCULATE THE PREDICTED OUTPUT USING np.dot(hidden_activations, output_weights) + output_bias
     predictedOutput = sigmoidFunction(predictedOutputWeightesSum)
     predictedList.append(predictedOutput)
     error = testOutputNodes[i] - predictedOutput # CALCULATE THE ERROR USING ACTUAL OUTPUT - PREDICTED OUTPUT
+    # print(f"Predicted: {predictedOutput}, Correct: {testOutputNodes[i]}")
     totalError += (error ** 2)
 print(f"TEST MSE: {totalError/len(testInputNodes)}")
+
+
+# P L O T   G R A P H S
+# PLOT THE MSE OVER EPOCHS
+plt.plot(range(epochs), listOfMSE)
+plt.xlabel('Epochs')
+plt.ylabel('Mean Squared Error (MSE)')
+plt.title('Training Error Over Epochs')
+plt.show()
 
 # PLOT ACTUAL VS PREDICTED GRAPH WITH A LINE OF BEST FIT
 fig, ax = plt.subplots()
