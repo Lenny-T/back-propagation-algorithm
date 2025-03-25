@@ -213,3 +213,13 @@ plt.xlabel('Predicted Values')
 plt.ylabel('Actual Values')
 plt.title('Predicted vs Actual')
 plt.show()
+
+# PREDICTED VS ACTUAL FROM TEST
+plt.plot(testOutputNodes, label="Actual", marker="o")
+plt.plot(predictedList, label="Predicted", marker="x")
+plt.xlabel("Epochs")
+plt.ylabel("Target")
+plt.title("Predicted vs Actual")
+plt.legend()
+plt.grid(True)
+plt.show()

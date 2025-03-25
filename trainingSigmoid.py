@@ -90,10 +90,8 @@ for epoch in range(epochs):
             hiddenNodeFirstDerivative = sigmoidDerivative(Uj[j]) # CALCULATE THE FIRST DERIVATIVE OF THE HIDDEN NODES
             hiddenNodeDelta = (outputWeights[j][0] * deltas["Output"]) * hiddenNodeFirstDerivative # CALCULATE THE DELTA OF THE HIDDEN NODE
             deltas[(j+1)] = hiddenNodeDelta
-        
 
         # UPDATE THE WEIGHTS FROM THE INPUTS
-        momentum = 0.9
         for x in range(len(hiddenInputWeights)):
             for y in range(len(hiddenInputWeights[x])):
                 hiddenInputWeights[x][y] += learningParam * (deltas[y+1][0] * inputNodes[i][x]) # ORIGINAL WEIGHT UPDATE
@@ -177,9 +175,19 @@ plt.show()
 
 # PLOT ACTUAL VS PREDICTED GRAPH WITH A LINE OF BEST FIT
 fig, ax = plt.subplots()
-ax.scatter(predictedList, testOutputNodes)
+ax.scatter(predictedList, testOutputNodes, c='red')
 plt.plot([min(testOutputNodes), max(testOutputNodes)], [min(testOutputNodes), max(testOutputNodes)])
 plt.xlabel('Predicted Values')
 plt.ylabel('Actual Values')
 plt.title('Predicted vs Actual')
+plt.show()
+
+# PREDICTED VS ACTUAL FROM TEST
+plt.plot(testOutputNodes, label="Actual", marker="o")
+plt.plot(predictedList, label="Predicted", marker="x")
+plt.xlabel("Epochs")
+plt.ylabel("Target")
+plt.title("Predicted vs Actual")
+plt.legend()
+plt.grid(True)
 plt.show()
